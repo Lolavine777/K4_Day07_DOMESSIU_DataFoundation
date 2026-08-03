@@ -35,6 +35,13 @@ class LocalEmbedder:
         return embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
 
+class BGEM3Embedder(LocalEmbedder):
+    """Explicit BGE-M3 name used by the shared benchmark runner."""
+
+    def __init__(self) -> None:
+        super().__init__(LOCAL_EMBEDDING_MODEL)
+
+
 class OpenAIEmbedder:
     def __init__(self, model_name: str = OPENAI_EMBEDDING_MODEL) -> None:
         from openai import OpenAI

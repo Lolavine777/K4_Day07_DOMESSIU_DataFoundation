@@ -1,0 +1,40 @@
+{
+  "embedding_model": "BAAI/bge-m3",
+  "results": [
+    {
+      "pair": 1,
+      "text_a": "This black cotton dress is available in several sizes.",
+      "text_b": "The black dress comes in multiple sizes.",
+      "prediction": "high",
+      "cosine_similarity": 0.894049
+    },
+    {
+      "pair": 2,
+      "text_a": "The item is made from 100% cotton.",
+      "text_b": "The product uses a cotton main fabric.",
+      "prediction": "high",
+      "cosine_similarity": 0.825571
+    },
+    {
+      "pair": 3,
+      "text_a": "This jacket is black.",
+      "text_b": "This jacket is bright red.",
+      "prediction": "low",
+      "cosine_similarity": 0.806858
+    },
+    {
+      "pair": 4,
+      "text_a": "Dry clean only.",
+      "text_b": "Machine wash at 40 degrees.",
+      "prediction": "low",
+      "cosine_similarity": 0.679024
+    },
+    {
+      "pair": 5,
+      "text_a": "The product is from adidas Originals.",
+      "text_b": "This item is made by Calvin Klein.",
+      "prediction": "low",
+      "cosine_similarity": 0.723282
+    }
+  ]
+}

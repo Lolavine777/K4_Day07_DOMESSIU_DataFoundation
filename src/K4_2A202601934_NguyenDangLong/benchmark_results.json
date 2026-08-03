@@ -7,7 +7,10 @@
   "corpus": "data/k4_asos_products",
   "retrieval_score": 10,
   "retrieval_score_max": 10,
-  "agent_answers_verified": false,
+  "agent_answers_verified": true,
+  "agent_score": 10,
+  "agent_score_max": 10,
+  "agent_evidence": "agent_benchmark_results.json",
   "results": [
     {
       "query_id": 1,

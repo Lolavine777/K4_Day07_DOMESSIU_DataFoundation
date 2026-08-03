@@ -1,5 +1,17 @@
-"""Compatibility facade for the active personal implementation."""
+from dataclasses import dataclass, field
 
-from .K4_2A202601934_NguyenDangLong.models import Document
 
-__all__ = ["Document"]
+@dataclass
+class Document:
+    """
+    A text document with optional metadata.
+
+    Fields:
+        id:       Unique identifier string.
+        content:  The raw text content.
+        metadata: Arbitrary key-value metadata (e.g. source, date, author).
+    """
+
+    id: str
+    content: str
+    metadata: dict = field(default_factory=dict)
