@@ -16,10 +16,6 @@ Ví dụ:
     # In bảng Markdown để dán vào REPORT_NHOM.md
     python benchmark/run_benchmark.py --data-dir data/k4_asos_products --markdown
 
-    # Benchmark chính thức của nhóm với BGE-M3
-    LOCAL_EMBEDDING_MODEL=BAAI/bge-m3 EMBEDDING_PROVIDER=local \
-    python benchmark/run_benchmark.py --data-dir data/k4_asos_products --chunker heading --markdown
-
 LƯU Ý: với embedder `mock`, điểm tương tự là NHIỄU nên top-3 vô nghĩa — chỉ dùng để
 kiểm tra pipeline. Chấm điểm thật cần EMBEDDING_PROVIDER=local (hoặc openai).
 """
@@ -41,11 +37,15 @@ from ingest import load_documents  # noqa: E402  (chỉ dùng để parse front 
 
 
 def select_embedder(package, provider: str):
-    """Chọn backend nhúng từ chính solution package (mock | local | openai)."""
+    """Chọn backend nhúng từ chính solution package (mock | local | bgem3 | openai)."""
     provider = (provider or "mock").strip().lower()
     if provider == "local":
-        model_name = os.getenv("LOCAL_EMBEDDING_MODEL", "").strip()
-        return package.LocalEmbedder(model_name=model_name) if model_name else package.LocalEmbedder()
+        return package.LocalEmbedder()
+    if provider in ("bgem3", "bge-m3"):
+        embedder_cls = getattr(package, "BGEM3Embedder", None)
+        if embedder_cls is None:
+            raise SystemExit(f"Package '{package.__name__}' chưa có BGEM3Embedder.")
+        return embedder_cls()
     if provider == "openai":
         return package.OpenAIEmbedder()
     return package._mock_embed
@@ -60,10 +60,10 @@ def make_chunker(package, name: str, chunk_size: int):
     if name == "recursive":
         return package.RecursiveChunker(chunk_size=chunk_size)
     if name == "heading":
-        chunker_class = getattr(package, "HeadingRecursiveChunker", None)
-        if chunker_class is None:
-            raise SystemExit(f"Package '{package.__name__}' không cung cấp HeadingRecursiveChunker")
-        return chunker_class(chunk_size=chunk_size)
+        chunker_cls = getattr(package, "HeadingChunker", None)
+        if chunker_cls is None:
+            raise SystemExit(f"Package '{package.__name__}' chưa có HeadingChunker.")
+        return chunker_cls(max_chars=chunk_size)
     raise SystemExit(f"Unknown --chunker '{name}' (dùng: fixed | sentence | recursive | heading)")
 
 
@@ -180,8 +180,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--data-dir", default="data/k4_asos_products", help="Thư mục corpus (mặc định data/k4_asos_products)")
     p.add_argument("--package", default="src", help="Solution package (ghi đè bằng env LAB_SOLUTION_PACKAGE)")
     p.add_argument("--chunker", default="recursive", help="fixed | sentence | recursive | heading")
-    p.add_argument("--chunk-size", type=int, default=400, help="chunk_size cho fixed/recursive")
-    p.add_argument("--provider", default="mock", help="mock | local | openai (ghi đè bằng env EMBEDDING_PROVIDER)")
+    p.add_argument("--chunk-size", type=int, default=400, help="chunk_size (fixed/recursive) hoặc max_chars (heading)")
+    p.add_argument("--provider", default="mock", help="mock | local | bgem3 | openai (ghi đè bằng env EMBEDDING_PROVIDER)")
     p.add_argument("--top-k", type=int, default=3, help="Số kết quả top-k (mặc định 3 theo rubric)")
     p.add_argument("--markdown", action="store_true", help="In bảng Markdown để dán vào REPORT_NHOM.md")
     return p.parse_args()
