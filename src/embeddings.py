@@ -1,12 +1,14 @@
-from __future__ import annotations
+"""Compatibility facade for the active personal implementation."""
 
-import hashlib
-import math
+from .K4_2A202601934_NguyenDangLong.embeddings import (
+    LOCAL_EMBEDDING_MODEL,
+    OPENAI_EMBEDDING_MODEL,
+    LocalEmbedder,
+    MockEmbedder,
+    OpenAIEmbedder,
+    _mock_embed,
+)
 
-# Multilingual model suitable for the Vietnamese corpora used in this Lab.
-# The local backend remains optional; required checkpoints use MockEmbedder.
-LOCAL_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_PROVIDER_ENV = "EMBEDDING_PROVIDER"
 
 
