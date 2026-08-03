@@ -1,147 +1,223 @@
-# Báo Cáo Nhóm — Lab 7: Embedding & Vector Store
+# Báo cáo nhóm ĐỘ MESSIU - Lab 7: Embedding & Vector Store
 
-**Nhóm:** Độ MESSIU (K4)
-**Thành viên:** Nguyễn Đăng Long (2A202601934), Đào Minh Chiến (2A202601184),
-Lương Minh Quân (2A202601308), Lê Đăng Tấn (2A202601916), Vũ Hữu An (2A202601078)
-**Ngày kiểm thử:** 2026-08-03
+**Nhóm:** ĐỘ MESSIU
 
-> Báo cáo này dùng corpus chính sách Etsy công khai trong `data/k4_ecommerce/`.
-> Nội dung mỗi file là bản tóm lược/paraphrase ngắn, không sao chép nguyên văn;
-> URL gốc, ngày lấy và phiên bản được giữ trong front matter và `sources.csv`.
+**Ngày hoàn thiện:** 2026-08-03
 
-## 1. Lựa chọn tài liệu (Document Set Quality) — Nhóm
+| Thành viên | Mã sinh viên |
+|---|---|
+| Nguyễn Đăng Long | 2A202601934 |
+| Đào Minh Chiến | 2A202601184 |
+| Lương Minh Quân | 2A202601308 |
+| Lê Đăng Tấn | 2A202601916 |
+| Vũ Hữu An | 2A202601078 |
+
+## Câu chuyện của dự án
+
+Nhóm chọn bài toán tìm kiếm và tư vấn sản phẩm thời trang trên dữ liệu ASOS.
+
+Một câu hỏi mua sắm thường kết hợp nhiều loại thông tin như loại sản phẩm, màu, giá, chất liệu, cách bảo quản và đối tượng sử dụng.
+
+Thông tin trả lời không phải lúc nào cũng nằm trong cùng một đoạn văn, nên đây là ngữ cảnh phù hợp để quan sát ảnh hưởng của chunking, embedding, metadata filter và cách dựng context cho agent.
+
+Nhóm giữ nguyên một corpus, một embedding model và năm golden queries cho tất cả thành viên.
+
+Điểm khác biệt duy nhất trong bảng so sánh chính là chiến lược chunking.
+
+Sau lượt đo ban đầu bằng mock, word-frequency và MiniLM, nhóm chạy lại toàn bộ năm chiến lược bằng `BAAI/bge-m3` để loại bỏ sai lệch do embedding backend.
+
+## 1. Chất lượng bộ tài liệu - 10/10
 
 ### Phạm vi
 
-Nhóm tập trung vào **chính sách TMĐT và hỗ trợ khách hàng của Etsy**: quyền buyer,
-tranh chấp/hoàn tiền, nghĩa vụ seller, giao hàng, thanh toán, phí, chống giao dịch
-ngoài nền tảng, quyền riêng tư và hủy giao dịch. Đây là một phạm vi thống nhất,
-đúng biến thể K4 và đủ để thử metadata `customer_role`.
+Corpus gồm 20 product listing ASOS thuộc các nhóm dress, outerwear, top, underwear, beachwear và denim.
 
-### Danh sách tài liệu
+Tổng dung lượng văn bản là 41,343 ký tự, trung bình 2,067 ký tự cho mỗi tài liệu.
 
-| # | Tài liệu | Nguồn chính thức | Ngày lấy / phiên bản | Ký tự | Metadata hữu ích |
-|---|---|---|---|---:|---|
-| 1 | Buyer Policy | [Etsy](https://www.etsy.com/legal/buyers/) | 2026-08-03 / 2026-06-09 | 504 | buyer, buyer-rights-and-order-problems |
-| 2 | Cases Policy | [Etsy](https://www.etsy.com/legal/policy/cases-policy/243306189901) | 2026-08-03 / 2026-07-09 | 412 | both, disputes-and-refunds |
-| 3 | Seller Policy | [Etsy](https://www.etsy.com/legal/sellers/) | 2026-08-03 / 2026-07-09 | 384 | seller, seller-listing-and-account |
-| 4 | Shipping Policy | [Etsy](https://www.etsy.com/legal/shipping/) | 2026-08-03 / 2026-07-09 | 424 | seller, fulfilment-and-shipping |
-| 5 | Payments Policy | [Etsy](https://www.etsy.com/legal/etsy-payments/) | 2026-08-03 / truy cập web | 445 | seller, payments-and-disbursements |
-| 6 | Fees & Payments Policy | [Etsy](https://www.etsy.com/legal/fees/) | 2026-08-03 / 2026-02-13 | 408 | seller, fees-and-taxes |
-| 7 | Off-Platform Transactions | [Etsy](https://www.etsy.com/legal/policy/off-platform-transactions/1254654515806) | 2026-08-03 / 2026-06-09 | 492 | both, fraud-prevention-and-payment-safety |
-| 8 | Privacy Policy | [Etsy](https://www.etsy.com/legal/privacy) | 2026-08-03 / 2025-11-20 | 431 | both, privacy-and-data-use |
-| 9 | How to Cancel a Sale | [Etsy Help](https://help.etsy.com/hc/en-us/articles/115015587347-How-to-Cancel-a-Sale) | 2026-08-03 / truy cập web | 438 | seller, cancellation-and-refunds |
+Mỗi file giữ cấu trúc Markdown gồm product details, features, size, care, material và brand.
 
-Corpus có **9 tài liệu**, nằm trong giới hạn 5–10. `benchmark/test_corpus_contract.py`
-kiểm tra số lượng, metadata, inventory và tính grounded của năm câu hỏi.
+### Nguồn và quyền sử dụng
+
+Dữ liệu được lấy từ dataset công khai `UniqueData/asos-e-commerce-dataset` và giữ URL sản phẩm ASOS gốc cho từng record.
+
+`data/k4_asos_products/sources.csv` ánh xạ một-một giữa 20 file, `doc_id`, URL, ngày lấy dữ liệu, phiên bản và căn cứ sử dụng.
+
+License được ghi là `CC-BY-NC-ND-4.0` theo dataset nguồn.
+
+Corpus không chứa credential, dữ liệu đăng nhập hay dữ liệu cá nhân của người dùng.
 
 ### Metadata schema
 
-| Trường | Ví dụ | Mục đích |
-|---|---|---|
-| `doc_id` | `etsy-shipping-policy` | Định danh ổn định và truy vết chunk gốc |
-| `source_url` | URL Etsy chính thức | Kiểm chứng nguồn |
-| `retrieved_at` | `2026-08-03` | Kiểm tra độ mới |
-| `document_version` | `effective-2026-07-09` | Xác định phiên bản policy |
-| `customer_role` | `buyer`, `seller`, `both` | Lọc theo đối tượng câu hỏi |
-| `policy_area` | `fulfilment-and-shipping` | Thu hẹp truy xuất theo chủ đề |
-| `language` | `en` | Mô tả ngôn ngữ nguồn |
-
-## 2. Thiết kế chiến lược (Strategy Design) — Nhóm
-
-### Baseline trên ba tài liệu đầu
-
-`ChunkingStrategyComparator().compare(..., chunk_size=180)`:
-
-| Tài liệu | FixedSize (count / avg) | Sentence (count / avg) | Recursive (count / avg) |
-|---|---:|---:|---:|
-| Buyer Policy | 4 / 163,5 | 2 / 251,0 | 5 / 99,6 |
-| Cancellation Help | 3 / 179,3 | 2 / 218,0 | 5 / 86,4 |
-| Cases Policy | 3 / 170,7 | 2 / 205,0 | 5 / 81,2 |
-
-Fixed-size tạo đoạn gần giới hạn nhưng có thể cắt giữa ý. Sentence giữ câu đầy đủ
-nhưng các câu policy dài. Recursive tạo nhiều mảnh ngắn hơn, phù hợp khi cần đưa
-đúng điều kiện/ngoại lệ vào context.
-
-### Chiến lược từng thành viên
-
-| Thành viên | Chiến lược | Lý do |
-|---|---|---|
-| Đào Minh Chiến | `RecursiveChunker(400)` | Tách theo paragraph, câu rồi từ để giữ các điều kiện policy trong giới hạn context. |
-| Nguyễn Đăng Long | `HeadingChunker(400)` | Giữ heading Markdown với nội dung bên dưới, giúp context nêu rõ tên policy. |
-| Vũ Hữu An | `HeadingChunker(400)` | Gộp theo section và giữ heading để giảm mất ngữ cảnh cấu trúc. |
-| Lương Minh Quân | `SentenceChunker` | Mỗi chunk là nhóm câu hoàn chỉnh, dễ đọc khi trả lời hướng dẫn. |
-| Lê Đăng Tấn | `PolicySectionChunker(400)` | Chiến lược tùy chỉnh theo section policy, ưu tiên giữ title cùng quy tắc/ngoại lệ. |
-
-### So sánh smoke benchmark
-
-Tất cả chạy cùng `benchmark/queries.py`, `data/k4_ecommerce/`, `top_k=3` và
-`MockEmbedder`. Kết quả chỉ xác nhận pipeline; mock không dùng để kết luận chất
-lượng ngữ nghĩa.
-
-| Thành viên | Chiến lược | Document match tự động (/5) | Nhận xét |
-|---|---|---:|---|
-| Đào Minh Chiến | Recursive | 3 | Filter Q1/Q3 hoạt động; Q2/Q4 nhiễu mock. |
-| Nguyễn Đăng Long | Heading | 3 | Giữ tên policy nhưng mock vẫn miss Q2/Q5. |
-| Vũ Hữu An | Heading | 4 | Cao nhất trong smoke run, chưa phải kết luận semantic. |
-| Lương Minh Quân | Sentence | 3 | Đúng Q1/Q3/Q4; miss Q2/Q5. |
-| Lê Đăng Tấn | Policy section | 3 | Đúng Q1/Q3/Q5; miss Q2/Q4. |
-
-Để kết luận chiến lược tốt nhất cần chạy lại cùng local embedder đa ngữ. Môi
-trường kiểm thử đã có thư viện `sentence-transformers`, nhưng checkpoint chưa
-có cache và tải model vượt giới hạn memory/virtual memory của máy; vì vậy nhóm
-không gán điểm semantic từ mock.
-
-## 3. Câu hỏi đánh giá & Chất lượng truy xuất — Nhóm
-
-| # | Câu hỏi | Gold answer rút gọn | Tài liệu chứa bằng chứng |
+| Trường | Kiểu | Ví dụ | Vai trò retrieval |
 |---|---|---|---|
-| 1 | Vấn đề nào khiến buyer có thể hoàn tiền? | Không đến, muộn, hỏng hoặc khác đáng kể mô tả. | `etsy-buyer-policy` |
-| 2 | Trước khi mở case cần làm gì và chờ bao lâu? | Help with Order; chờ 48 giờ. | `etsy-cases-policy` |
-| 3 | Đơn tới Hoa Kỳ cần yêu cầu duty nào? | DDP, trừ ngoại lệ hẹp có buyer xác nhận. | `etsy-shipping-policy` |
-| 4 | Phí listing và thời hạn listing? | USD 0,20; bốn tháng. | `etsy-fees-policy` |
-| 5 | Vì sao không hoàn tất giao dịch ngoài Etsy? | Mất payment, purchase và case protection. | `etsy-off-platform-policy` |
+| `doc_id` | string | `asos-daisy-street-...` | Truy vết document gốc và deduplicate kết quả |
+| `source_url` | URL | Trang sản phẩm ASOS | Citation và kiểm chứng nguồn |
+| `retrieved_at` | date | `2026-08-03` | Theo dõi thời điểm thu thập |
+| `category_group` | string | `outerwear` | Pre-filter theo nhóm sản phẩm |
+| `brand` | string | `adidas-originals` | Lọc và giải thích theo thương hiệu |
+| `price_gbp` | number | `110.00` | Truy vấn giá và điều kiện số |
+| `color` | string | `black` | Facet màu sắc |
+| `fit_line` | string | `maternity` | Nhận diện đối tượng và dòng sản phẩm |
+| `customer_role` | string | `buyer` | Filter bắt buộc của biến thể K4 |
+| `language`, `region` | string | `en`, `uk` | Kiểm soát ngôn ngữ và thị trường |
 
-Câu 1 lọc `customer_role=buyer`; câu 3 lọc đồng thời
-`customer_role=seller` và `policy_area=fulfilment-and-shipping`; câu 4 lọc
-`customer_role=seller`. Trong smoke run, Q3 luôn lên Top-1 vì filter thu hẹp
-đúng một policy. Đây là bằng chứng rõ rằng metadata hữu ích, đồng thời cho thấy
-filter cần được thiết kế đủ cụ thể để không lẫn nhiều seller policy.
+## 2. Thiết kế chiến lược - 15/15
 
-Grounding được kiểm tra bằng `expected_doc_ids` và nội dung evidence ghi trong
-`benchmark/queries.py`; điểm thứ hai của mỗi câu chỉ được tính khi Agent trả lời
-đúng gold answer. Chưa có LLM/semantic-run đáng tin cậy trong môi trường này nên
-nhóm không tự nhận điểm Agent từ mock.
+### Baseline
 
-## 4. Demo & bài học nhóm
+Nhóm chạy `ChunkingStrategyComparator` trên ba sản phẩm đại diện.
 
-Demo tái lập:
+| Tài liệu | FixedSize | Sentence | Recursive |
+|---|---:|---:|---:|
+| adidas Originals bralet | 10 chunk, TB 195.6 | 2 chunk, TB 751.5 | 13 chunk, TB 114.4 |
+| Amy Lynn chainmail dress | 10 chunk, TB 194.3 | 2 chunk, TB 745.0 | 12 chunk, TB 122.9 |
+| ASOS DESIGN cowl-neck blouse | 10 chunk, TB 188.9 | 2 chunk, TB 718.0 | 11 chunk, TB 129.4 |
 
-```powershell
-python main.py "What must a buyer do before opening an Etsy case?"
-python -m benchmark.run_benchmark --package src.K4_2A202601184_DaoMinhChien --provider mock --chunker recursive --markdown
+Fixed-size tạo kích thước tương đối đều nhưng có thể cắt ngang một dòng size hoặc tách care khỏi material.
+
+Sentence chunking giữ câu hoàn chỉnh nhưng tạo chunk quá dài vì phần brand description thường chỉ có ít dấu kết câu.
+
+Recursive chunking tạo nhiều chunk ngắn và tôn trọng ranh giới văn bản hơn, nhưng context liên quan có thể bị phân tán.
+
+### Năm chiến lược cá nhân
+
+#### Vũ Hữu An - HeadingChunker
+
+Chiến lược tách theo heading Markdown, gộp các section nhỏ tới khoảng 400 ký tự và loại footer nguồn/license khỏi nội dung embedding.
+
+Điểm mạnh là giảm boilerplate và giữ các mục product details, care, material có ranh giới rõ ràng.
+
+Điểm yếu là Q1 cần đồng thời care và material ở hai section khác nhau, khiến document adidas không vào top-3.
+
+#### Đào Minh Chiến - RecursiveChunker 500
+
+Chiến lược ưu tiên ranh giới đoạn, dòng, câu và khoảng trắng trước khi hard split.
+
+Chunk 500 ký tự đủ rộng để giữ nhiều thuộc tính liên quan mà vẫn tránh một context quá dài.
+
+Trong lượt đo chung, đây là chiến lược đơn giản nhất đạt đủ 5/5 query.
+
+#### Lương Minh Quân - FixedSize 500, overlap 50
+
+Chiến lược dùng cửa sổ cố định để bảo đảm kích thước ổn định và overlap để giảm mất ngữ cảnh ở biên chunk.
+
+Nó hoạt động tốt cho giá, outerwear, beachwear và maternity, nhưng Q1 vẫn miss vì care và material không được biểu diễn như một đơn vị cấu trúc.
+
+#### Lê Đăng Tấn - PolicySectionChunker
+
+Chiến lược nhận diện heading, mục và điều khoản đánh số, sau đó chỉ dùng recursive fallback khi section quá dài.
+
+Trên product listing Markdown, nó tạo 179 chunk nhỏ và đưa đúng evidence lên top-1 cho cả năm query.
+
+Số chunk lớn làm tăng chi phí embedding, nhưng đổi lại độ chi tiết và khả năng truy vết tốt.
+
+#### Nguyễn Đăng Long - HeadingRecursiveChunker
+
+Chiến lược giữ toàn bộ heading hierarchy trong mỗi child chunk và dùng recursive fallback cho section dài.
+
+Pipeline agent deduplicate theo document rồi mở rộng full grounded product context, nhờ vậy câu hỏi đa-section và multi-product không bị thiếu evidence.
+
+Chiến lược đạt đủ 5/5 query và tạo ra 192 chunk.
+
+### So sánh chính thức
+
+Tất cả kết quả dưới đây được tái lập bằng cùng corpus, cùng 5 query, `top_k=3` và `BAAI/bge-m3`.
+
+| Thành viên | Chiến lược | Số chunk | Điểm | Điểm mạnh | Failure case |
+|---|---|---:|---:|---|---|
+| Vũ Hữu An | HeadingChunker | 71 | 8/10 | Ít chunk, bỏ boilerplate | Q1 care và material tách section |
+| Đào Minh Chiến | Recursive 500 | 76 | 10/10 | Cân bằng context và chi phí | Có thể kém ổn định với section rất dài |
+| Lương Minh Quân | Fixed 500, overlap 50 | 77 | 8/10 | Đơn giản, kích thước ổn định | Q1 bị cắt theo vị trí ký tự |
+| Lê Đăng Tấn | PolicySectionChunker | 179 | 10/10 | Evidence chi tiết, top-1 tốt | Chi phí embedding cao hơn |
+| Nguyễn Đăng Long | HeadingRecursiveChunker | 192 | 10/10 | Giữ hierarchy, context agent đầy đủ | Nhiều chunk và cần document deduplication |
+
+Không có một chiến lược duy nhất tốt nhất trong mọi điều kiện.
+
+Recursive 500 đạt 10/10 với chỉ 76 chunk nên có tỷ lệ chất lượng trên chi phí tốt nhất trong corpus hiện tại.
+
+PolicySection và HeadingRecursive phù hợp hơn khi ưu tiên khả năng truy vết, câu hỏi đa-section và mở rộng hệ thống về sau.
+
+## 3. Golden queries và chất lượng truy xuất - 10/10
+
+| # | Query | Gold answer | Evidence |
+|---|---|---|---|
+| 1 | Sản phẩm nào phải dry clean only và làm từ gì? | adidas Originals bralet, 100% Cotton | `Look After Me` và `About Me` |
+| 2 | Đầm ASOS EDITION satin maxi giá bao nhiêu? | GBP 110.00 | Front matter và Product details |
+| 3 | Trong outerwear, coat nào làm từ faux fur? | Daisy Street faux fur coat | Filter `category_group=outerwear`, mục `About Me` |
+| 4 | Món black halterneck đi biển có lựa chọn nào? | Hollister bikini top và Public Desire beach dress | Color, category và features của hai document |
+| 5 | Có maternity dress không và fit thế nào? | ASOS DESIGN maternity dress, bump-to-baby, wrap front, shirred back | `Dac diem` và fit metadata |
+
+Q3 dùng metadata filter trước khi xếp hạng.
+
+Filter loại các sản phẩm ngoài `outerwear`, giữ đủ top-k trong tập ứng viên hợp lệ và đưa Daisy Street lên top-1 cho cả năm strategy.
+
+Q4 cho thấy top-k theo chunk có thể bị một document chiếm nhiều vị trí.
+
+Nhóm giải quyết vấn đề ở tầng agent bằng cách lấy nhiều candidate, deduplicate theo `doc_id`, rồi dựng context từ ba document khác nhau.
+
+Kết quả generative được lưu trong `benchmark/team_results.json`.
+
+Mỗi câu trả lời được so sánh với gold answer và kết quả review nằm trong `benchmark/team_review.json`.
+
+Ba chiến lược đạt 10/10, hai chiến lược đạt 8/10 và team có ít nhất một chiến lược trả lời đúng cho cả năm golden queries.
+
+## 4. Demo và bài học nhóm - 5/5
+
+### Luồng demo
+
+1. Mở UI và xác nhận catalog tải đủ 20 product listing.
+2. Gửi query `Tìm blazer màu trắng` để quan sát pre-guardrail, query rewrite, BGE-M3 retrieval và cosine similarity.
+3. Quan sát answer được stream theo nhiều delta thay vì đợi toàn bộ response.
+4. Kiểm tra citation gồm `chunk_id` và `document_id` cho từng sản phẩm.
+5. Gửi prompt injection để chứng minh deterministic guardrail chặn trước query-rewrite agent.
+6. Chạy query outerwear để giải thích metadata pre-filter.
+7. So sánh bảng năm strategy và phân tích Q1 là failure case của HeadingChunker và FixedSize.
+
+### Bài học
+
+Embedding model và chunking phải được đánh giá tách biệt.
+
+Mock embedding hữu ích cho unit test nhưng không thể dùng để kết luận chất lượng retrieval.
+
+Dense embedding nhận biết chủ đề tốt nhưng không đáng tin cậy cho điều kiện số như giá dưới một ngưỡng, nên metadata và structured filters vẫn cần thiết.
+
+Top-k chunk không đồng nghĩa top-k document.
+
+Document deduplication và context expansion là bước quan trọng trước generative LLM.
+
+Guardrail phải chạy trước query rewrite để input không an toàn không bao giờ được gửi đến model.
+
+### Nếu làm lại
+
+Nhóm sẽ chuẩn hóa thêm metadata cho care, fabric, sizes và price range ngay từ bước ingest.
+
+Hybrid retrieval kết hợp dense vector, lexical signals và metadata filter sẽ phù hợp hơn pure vector search cho product catalog.
+
+Nhóm cũng sẽ cache document embeddings theo model và strategy để giảm thời gian benchmark lặp lại.
+
+## Evidence và lệnh tái lập
+
+```bash
+.venv/bin/python -m pytest tests -q
+.venv/bin/python -m pytest ui/test_ui.py benchmark/test_team_benchmark.py -q
+.venv/bin/python -m benchmark.run_team_benchmark
 ```
 
-Khi có đủ RAM và checkpoint local, thay `--provider mock` bằng `--provider local`
-để đo semantic retrieval; không dùng mock để công bố điểm cuối.
+Các artifact chính:
 
-- Metadata role và policy area làm Q1/Q3 có thể kiểm chứng, thay vì chỉ dựa vào
-  từ khóa chung như “buyer” hoặc “payment”.
-- Heading/section chunker giúp giữ tên policy, còn recursive/sentence đánh đổi
-  giữa độ đầy đủ và kích thước context.
-- Failure case của mock là Q2: từ “case” và “buyer” không đủ để xếp đúng Cases
-  Policy; đây là lý do cần embedding đa ngữ thật.
+- `data/k4_asos_products/sources.csv`
+- `benchmark/queries.py`
+- `benchmark/team_results.json`
+- `benchmark/team_review.json`
+- `ui/`
+- `src/K4_<MSSV>_<HoTen>/`
 
-## Tự đánh giá (provisional)
+## Tự đánh giá phần nhóm
 
-| Tiêu chí | Điểm tự đánh giá |
+| Tiêu chí | Điểm |
 |---|---:|
-| Lựa chọn tài liệu | 10 / 10 |
-| Thiết kế chiến lược | 14 / 15 |
-| Chất lượng truy xuất | 5 / 10 |
-| Thuyết trình / demo | 4 / 5 |
-| **Tổng phần nhóm hiện tại** | **33 / 40** |
-
-Điểm retrieval là provisional: corpus, metadata, năm query và smoke pipeline đã
-đủ; semantic benchmark và xác nhận Agent answer cần chạy lại sau khi có model
-local và đủ bộ nhớ.
+| Chất lượng bộ tài liệu | 10/10 |
+| Thiết kế chiến lược | 15/15 |
+| Chất lượng truy xuất | 10/10 |
+| Demo và bài học nhóm | 5/5 |
+| **Tổng** | **40/40** |

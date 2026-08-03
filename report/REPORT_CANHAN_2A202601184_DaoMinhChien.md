@@ -190,12 +190,13 @@ có thể biểu diễn các quan hệ ngữ nghĩa này tốt hơn.
 
 ### Phạm vi phép thử
 
-Tôi chạy đúng năm câu hỏi chung trong `benchmark/queries.py` trên corpus chính
-sách Etsy công khai `data/k4_ecommerce/`. Cấu hình cá nhân dùng
-`RecursiveChunker(chunk_size=500)`, tạo 10 chunk, và vector tần suất từ vựng đã
-chuẩn hóa để kết quả có thể tái lập offline. Câu 1 lọc
-`{"customer_role": "buyer"}`; câu 3 lọc đồng thời seller và policy area, đúng
-yêu cầu metadata của biến thể K4.
+Tôi chạy đúng năm câu hỏi chung trong `benchmark/queries.py` trên corpus ASOS
+`data/k4_asos_products/`. Cấu hình cá nhân dùng
+`RecursiveChunker(chunk_size=500)`, tạo 76 chunk, và vector tần suất từ vựng đã
+chuẩn hóa để kết quả có thể tái lập offline mà không dùng mock embedding ngẫu
+nhiên. Câu 3 sử dụng metadata filter
+`{"category_group": "outerwear", "customer_role": "buyer"}` theo yêu cầu biến
+thể K4.
 
 Script `src/K4_2A202601184_DaoMinhChien/evaluation.py` lưu cố định năm cặp câu,
 năm truy vấn, vectorizer, cấu hình chunking, Top-3 và Agent stub trích xuất; vì
@@ -203,21 +204,23 @@ vậy các số liệu trong hai bảng có thể được kiểm tra lại đ�
 
 | # | Câu hỏi | Top-1 chunk truy xuất được | Score | Liên quan? | Câu trả lời Agent (tóm tắt từ context) |
 |---|---|---|---:|---|---|
-| 1 | Vấn đề nào khiến buyer đủ điều kiện hoàn tiền? | `etsy-buyer-policy` | 0,0778 | Có (Top-2) | Chunk thứ hai nêu không đến, muộn, hỏng hoặc khác mô tả. |
-| 2 | Trước khi mở case cần làm gì và chờ bao lâu? | `etsy-cases-policy` | 0,2231 | Có | Context nêu Help with Order và mốc 48 giờ. |
-| 3 | Đơn tới Hoa Kỳ cần yêu cầu duty nào? | `etsy-shipping-policy` | 0,1150 | Có | Filter đưa policy shipping lên Top-1; context nêu DDP và ngoại lệ. |
-| 4 | Phí listing và thời hạn listing? | `etsy-fees-policy` | 0,3074 | Có | Context nêu USD 0,20 và bốn tháng. |
-| 5 | Vì sao không hoàn tất giao dịch ngoài Etsy? | `etsy-off-platform-policy` | 0,1624 | Có | Context nêu mất payment, purchase và case protection. |
+| 1 | Sản phẩm nào phải giặt khô và làm từ chất liệu gì? | `asos-collusion-x008-y2k-flare-jeans-co-ord-in-pink-tint-dirty-wash` | 0,2272 | Không | Context đầu nói về thương hiệu COLLUSION, không trả lời được yêu cầu. |
+| 2 | Đầm maxi ASOS EDITION satin cami giá bao nhiêu? | `asos-asos-edition-satin-cami-maxi-dress-with-full-skirt-in-dusky-blue` | 0,4706 | Có | Truy xuất đúng tài liệu nhưng context đầu mới chứa nguồn, chưa trích được giá £110. |
+| 3 | Trong nhóm outerwear, áo nào làm từ faux fur? | `asos-daisy-street-mid-length-faux-fur-coat-in-wavy-checkerboard-print` | 0,1896 | Có | Filter đưa đúng tài liệu Daisy Street lên Top-1; context đầu vẫn thiên về nguồn thay vì câu trả lời. |
+| 4 | Món màu đen, cổ yếm để đi biển có lựa chọn nào? | `asos-new-look-ruched-button-vest-in-brown` | 0,2378 | Không | Context không liên quan nên Agent chưa trả lời được hai lựa chọn chuẩn. |
+| 5 | Có đầm bầu không và được thiết kế vừa vặn thế nào? | `asos-asos-design-maternity-cami-wrap-midi-dress-with-lace-up-back` | 0,3115 | Không | Đúng tài liệu maternity ở Top-1 nhưng chunk trả về chưa chứa các bằng chứng “bump to baby”, wrap front và shirred back. |
 
-Script tự động ghi nhận **5 / 5 document match trong Top-3**; kiểm tra nội dung
-chunk cũng cho thấy cả năm có bằng chứng liên quan. Agent trong evaluation là
-stub chỉ để kiểm tra prompt grounding, không phải LLM trả lời gold answer.
+Script tự động ghi nhận **3 / 5 document match trong Top-3** (câu 2, 3 và 5).
+Sau khi đọc nội dung từng chunk, **số câu có chunk chứa bằng chứng liên quan trong
+Top-3 là 2 / 5** (câu 2 và 3); câu 5 chỉ đúng `doc_id`, chưa đủ bằng chứng để
+Agent trả lời gold answer.
 
-Metadata filter ở câu 3 có tác dụng rõ: nó giới hạn ứng viên bằng
-`customer_role=seller` và `policy_area=fulfilment-and-shipping`, đưa đúng policy
-lên Top-1. Câu 1 chỉ có hai chunk cùng tài liệu nên bằng chứng rơi ở Top-2; đây
-là lý do cần kiểm tra toàn bộ Top-3 thay vì chỉ Top-1. Hướng cải thiện tiếp theo
-là dùng multilingual semantic embedder và LLM thật để đánh giá câu trả lời.
+Metadata filter ở câu 3 có tác dụng rõ: nó giới hạn ứng viên về nhóm
+`outerwear` và đưa tài liệu Daisy Street faux-fur lên Top-1. Hai failure case là
+câu 1 và 4; vector từ vựng bị nhiễu bởi các từ phổ biến, còn chunk theo kích
+thước chưa ưu tiên các heading như `Look After Me`, `About Me` hay `Dac diem`.
+Hướng cải thiện là dùng multilingual semantic embedder và chunk theo heading để
+giữ thuộc tính sản phẩm cùng tiêu đề mục.
 
 **Điều học được từ benchmark chung:** cùng một corpus và năm câu hỏi cố định mới
 cho phép so sánh công bằng giữa các thành viên. Retrieval đúng `doc_id` chưa đủ;
@@ -233,11 +236,11 @@ chunk Top-1 còn phải chứa đúng bằng chứng để Agent trả lời kh�
 | Hướng tiếp cận của tôi | 10 / 10 |
 | Hoàn thiện code — 42/42 tests | 30 / 30 |
 | Dự đoán độ tương tự | 5 / 5 |
-| Kết quả truy xuất trên benchmark chung | 5 / 10 |
-| **Tổng phần cá nhân hiện tại** | **55 / 60** |
+| Kết quả truy xuất trên benchmark chung | 2 / 10 |
+| **Tổng phần cá nhân hiện tại** | **52 / 60** |
 
-Phần retrieval tự đánh giá 5/10: cả năm câu có chunk liên quan trong Top-3,
-nhưng chưa có LLM/semantic benchmark đủ tài nguyên để xác nhận điểm Agent answer
-thứ hai của từng câu. Đây là kết quả offline có thể tái lập, chưa phải điểm cuối
-khi dùng local multilingual embedder.
+Phần retrieval tự đánh giá 2/10: ba câu có đúng tài liệu trong Top-3, nhưng chỉ
+hai câu có chunk chứa bằng chứng liên quan; Agent stub vẫn chưa trích đủ gold
+answer. Đây là kết quả offline có thể tái lập, chưa phải điểm cuối khi dùng local
+multilingual embedder.
 

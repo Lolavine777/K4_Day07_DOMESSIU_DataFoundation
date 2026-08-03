@@ -7,20 +7,20 @@ truy xuất" (top-3 có chunk liên quan?) và so sánh trong nhóm (competition
 Ví dụ:
     # Chỉ định package cần chấm; mock chỉ để thử plumbing
     python benchmark/run_benchmark.py --package src.K4_2A202601184_DaoMinhChien \
-        --data-dir data/k4_ecommerce
+        --data-dir data/k4_asos_products
 
     # Package cá nhân + embedder thật (chấm điểm có ý nghĩa)
     LAB_SOLUTION_PACKAGE=src.K4_2A202601078_VuHuuAn \
     EMBEDDING_PROVIDER=local \
-    python benchmark/run_benchmark.py --data-dir data/k4_ecommerce --chunker recursive
+    python benchmark/run_benchmark.py --data-dir data/k4_asos_products --chunker recursive
 
     # In bảng Markdown để dán vào REPORT_NHOM.md
     python benchmark/run_benchmark.py --package src.K4_2A202601184_DaoMinhChien \
-        --data-dir data/k4_ecommerce --markdown
+        --data-dir data/k4_asos_products --markdown
 
     # Benchmark chính thức của nhóm với BGE-M3
     LOCAL_EMBEDDING_MODEL=BAAI/bge-m3 EMBEDDING_PROVIDER=local \
-    python benchmark/run_benchmark.py --data-dir data/k4_ecommerce --chunker heading --markdown
+    python benchmark/run_benchmark.py --data-dir data/k4_asos_products --chunker heading --markdown
 
 LƯU Ý: với embedder `mock`, điểm tương tự là NHIỄU nên top-3 vô nghĩa — chỉ dùng để
 kiểm tra pipeline. Chấm điểm thật cần EMBEDDING_PROVIDER=local (hoặc openai).
@@ -77,12 +77,7 @@ def make_chunker(package, name: str, chunk_size: int):
             return chunker_cls(max_chars=chunk_size)
         except TypeError:
             return chunker_cls(chunk_size=chunk_size)
-    if name == "policy":
-        chunker_cls = getattr(package, "PolicySectionChunker", None)
-        if chunker_cls is None:
-            raise SystemExit(f"Package '{package.__name__}' chưa có PolicySectionChunker.")
-        return chunker_cls(chunk_size=chunk_size)
-    raise SystemExit(f"Unknown --chunker '{name}' (dùng: fixed | sentence | recursive | heading | policy)")
+    raise SystemExit(f"Unknown --chunker '{name}' (dùng: fixed | sentence | recursive | heading)")
 
 
 def build_store(package, data_dir: str, chunker, embedder):
@@ -151,7 +146,7 @@ def run(args) -> int:
 
     if not Path(args.data_dir).exists():
         print(f"Không tìm thấy thư mục dữ liệu: {args.data_dir}", file=sys.stderr)
-        print("Corpus K4 chuẩn nằm tại data/k4_ecommerce.", file=sys.stderr)
+        print("Corpus K4 nằm trên branch data (data/k4_asos_products). Merge/checkout data trước.", file=sys.stderr)
         return 2
 
     embedder = select_embedder(package, provider)
@@ -206,10 +201,10 @@ def _print_markdown(package_name, chunker, backend, rows, total):
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Chấm bộ benchmark 5 câu trên 1 solution package/chiến lược.")
-    p.add_argument("--data-dir", default="data/k4_ecommerce", help="Thư mục corpus (mặc định data/k4_ecommerce)")
+    p.add_argument("--data-dir", default="data/k4_asos_products", help="Thư mục corpus (mặc định data/k4_asos_products)")
     p.add_argument("--package", help="Solution package; cũng có thể đặt bằng env LAB_SOLUTION_PACKAGE")
-    p.add_argument("--chunker", default="recursive", help="fixed | sentence | recursive | heading | policy")
-    p.add_argument("--chunk-size", type=int, default=400, help="chunk_size cho fixed/recursive/heading/policy")
+    p.add_argument("--chunker", default="recursive", help="fixed | sentence | recursive | heading")
+    p.add_argument("--chunk-size", type=int, default=400, help="chunk_size cho fixed/recursive")
     p.add_argument("--provider", default="mock", help="mock | local | bgem3 | openai (ghi đè bằng env EMBEDDING_PROVIDER)")
     p.add_argument("--top-k", type=int, default=3, help="Số kết quả top-k (mặc định 3 theo rubric)")
     p.add_argument("--markdown", action="store_true", help="In bảng Markdown để dán vào REPORT_NHOM.md")

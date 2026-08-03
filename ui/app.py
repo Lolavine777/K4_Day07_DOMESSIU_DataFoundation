@@ -14,7 +14,7 @@ UI_DIR = Path(__file__).resolve().parent
 DATA_DIR = ROOT_DIR / "data" / "k4_asos_products"
 
 
-def create_app(llm: ChatClient | None = None, data_dir: Path = DATA_DIR) -> Flask:
+def create_app(llm: ChatClient | None = None, data_dir: Path = DATA_DIR, embedder=None) -> Flask:
     load_dotenv(UI_DIR / ".env", override=False)
     load_dotenv(ROOT_DIR / ".env", override=False)
     app = Flask(__name__)
@@ -23,7 +23,7 @@ def create_app(llm: ChatClient | None = None, data_dir: Path = DATA_DIR) -> Flas
         active_llm = llm or OpenAIChatClient.from_environment()
     except ConfigurationError as error:
         active_llm, startup_error = None, str(error)
-    service = CatalogService(data_dir, active_llm)
+    service = CatalogService(data_dir, active_llm, embedder=embedder)
 
     @app.get("/")
     def index() -> str:
