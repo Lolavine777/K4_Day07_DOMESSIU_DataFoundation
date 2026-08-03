@@ -1,0 +1,15 @@
+{
+  "reviewed_against": "benchmark/queries.py",
+  "embedding_model": "BAAI/bge-m3",
+  "reviewed_at": "2026-08-03",
+  "members": [
+    {"student_id": "2A202601078", "name": "Vũ Hữu An", "correct_query_ids": [2, 3, 4, 5], "score": 8},
+    {"student_id": "2A202601184", "name": "Đào Minh Chiến", "correct_query_ids": [1, 2, 3, 4, 5], "score": 10},
+    {"student_id": "2A202601308", "name": "Lương Minh Quân", "correct_query_ids": [2, 3, 4, 5], "score": 8},
+    {"student_id": "2A202601916", "name": "Lê Đăng Tấn", "correct_query_ids": [1, 2, 3, 4, 5], "score": 10},
+    {"student_id": "2A202601934", "name": "Nguyễn Đăng Long", "correct_query_ids": [1, 2, 3, 4, 5], "score": 10}
+  ],
+  "team_retrieval_score": 10,
+  "team_retrieval_score_max": 10,
+  "review_note": "Each generated answer was compared with the corresponding gold answer. A query received credit only when retrieval contained the required document and the answer contained the requested facts."
+}
