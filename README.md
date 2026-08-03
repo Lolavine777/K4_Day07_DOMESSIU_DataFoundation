@@ -1,6 +1,6 @@
 # K4 — Ngày 7: Nền Tảng Dữ Liệu, Embedding & Vector Store
 
-## Nhóm K4
+## Nhóm ĐỘ MESSIU - K4
 
 | Thành viên | Mã sinh viên |
 |---|---|
