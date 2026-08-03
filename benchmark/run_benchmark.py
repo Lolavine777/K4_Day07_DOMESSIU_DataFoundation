@@ -66,10 +66,17 @@ def make_chunker(package, name: str, chunk_size: int):
     if name == "recursive":
         return package.RecursiveChunker(chunk_size=chunk_size)
     if name == "heading":
-        chunker_cls = getattr(package, "HeadingChunker", None)
+        chunker_cls = getattr(package, "HeadingChunker", None) or getattr(
+            package, "HeadingRecursiveChunker", None
+        )
         if chunker_cls is None:
-            raise SystemExit(f"Package '{package.__name__}' chưa có HeadingChunker.")
-        return chunker_cls(max_chars=chunk_size)
+            raise SystemExit(
+                f"Package '{package.__name__}' chưa có HeadingChunker hoặc HeadingRecursiveChunker."
+            )
+        try:
+            return chunker_cls(max_chars=chunk_size)
+        except TypeError:
+            return chunker_cls(chunk_size=chunk_size)
     raise SystemExit(f"Unknown --chunker '{name}' (dùng: fixed | sentence | recursive | heading)")
 
 
@@ -196,9 +203,9 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Chấm bộ benchmark 5 câu trên 1 solution package/chiến lược.")
     p.add_argument("--data-dir", default="data/k4_asos_products", help="Thư mục corpus (mặc định data/k4_asos_products)")
     p.add_argument("--package", help="Solution package; cũng có thể đặt bằng env LAB_SOLUTION_PACKAGE")
-    p.add_argument("--chunker", default="recursive", help="fixed | sentence | recursive")
+    p.add_argument("--chunker", default="recursive", help="fixed | sentence | recursive | heading")
     p.add_argument("--chunk-size", type=int, default=400, help="chunk_size cho fixed/recursive")
-    p.add_argument("--provider", default="mock", help="mock | local | openai (ghi đè bằng env EMBEDDING_PROVIDER)")
+    p.add_argument("--provider", default="mock", help="mock | local | bgem3 | openai (ghi đè bằng env EMBEDDING_PROVIDER)")
     p.add_argument("--top-k", type=int, default=3, help="Số kết quả top-k (mặc định 3 theo rubric)")
     p.add_argument("--markdown", action="store_true", help="In bảng Markdown để dán vào REPORT_NHOM.md")
     return p.parse_args()

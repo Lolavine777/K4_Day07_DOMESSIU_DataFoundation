@@ -18,9 +18,9 @@ from src.embeddings import (
     _mock_embed,
 )
 
-# Thư mục dữ liệu mặc định cho demo = bộ khởi động cố định của lớp K4.
+# Thư mục dữ liệu mặc định cho demo = corpus ASOS đã được nhóm chuẩn hóa.
 # Đổi bằng biến môi trường: LAB_DATA_DIR=data/<thu-muc-cua-nhom> python3 main.py
-DEFAULT_DATA_DIR = "data/k4_ecommerce"
+DEFAULT_DATA_DIR = "data/k4_asos_products"
 
 
 def _select_embedder():
