@@ -18,9 +18,9 @@ from src.embeddings import (
     _mock_embed,
 )
 
-# Thư mục dữ liệu mặc định cho demo = corpus ASOS đã được nhóm chuẩn hóa.
+# Thư mục dữ liệu mặc định cho demo = corpus chính sách Etsy đã được nhóm chuẩn hóa.
 # Đổi bằng biến môi trường: LAB_DATA_DIR=data/<thu-muc-cua-nhom> python3 main.py
-DEFAULT_DATA_DIR = "data/k4_asos_products"
+DEFAULT_DATA_DIR = "data/k4_ecommerce"
 
 
 def _select_embedder():

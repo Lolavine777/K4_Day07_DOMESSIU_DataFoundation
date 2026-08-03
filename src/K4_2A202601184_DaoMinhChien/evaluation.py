@@ -78,7 +78,7 @@ def _extract_top_context(prompt: str) -> str:
 
 def run_evaluation() -> dict:
     repo_root = Path(__file__).resolve().parents[2]
-    data_dir = repo_root / "data" / "k4_asos_products"
+    data_dir = repo_root / "data" / "k4_ecommerce"
     documents = load_documents(data_dir)
     if not documents:
         raise RuntimeError(f"Không tìm thấy tài liệu benchmark trong {data_dir}")
