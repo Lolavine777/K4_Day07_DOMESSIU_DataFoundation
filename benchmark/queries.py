@@ -1,7 +1,7 @@
-"""Bộ 5 câu hỏi đánh giá (benchmark) cho corpus K4 — chính sách Etsy công khai.
+"""Bộ 5 câu hỏi đánh giá (benchmark) cho corpus K4 — ASOS product listings.
 
-Gold answer + expected_doc_ids được đối chiếu trực tiếp từ các bản tóm lược có
-nguồn trong `data/k4_ecommerce/` (đổi trả, tranh chấp, giao hàng, phí, an toàn thanh toán).
+Gold answer + expected_doc_ids được đối chiếu trực tiếp từ nội dung tài liệu thật
+trong `data/k4_asos_products/` (giá, chất liệu, cách bảo quản, danh mục, tính năng).
 
 Mỗi mục:
   id                : số thứ tự (1..5)
@@ -17,52 +17,68 @@ Mỗi mục:
 BENCHMARK = [
     {
         "id": 1,
-        "type": "buyer-refund-eligibility",
-        "query": "Which order problems may qualify an Etsy buyer for a refund?",
-        "query_vi": "Những vấn đề đơn hàng nào có thể khiến buyer Etsy đủ điều kiện hoàn tiền?",
-        "gold_answer": "Hàng không đến, đến muộn, hư hỏng hoặc khác đáng kể so với mô tả.",
-        "metadata_filter": {"customer_role": "buyer"},
-        "expected_doc_ids": ["etsy-buyer-policy"],
-        "evidence": "etsy-buyer-policy: phần order problem đủ điều kiện hoàn tiền.",
+        "type": "attribute-care-fabric",
+        "query": "Which item must be dry cleaned only, and what is it made of?",
+        "query_vi": "Sản phẩm nào phải giặt khô, và sản phẩm đó làm từ chất liệu gì?",
+        "gold_answer": (
+            "adidas Originals Plus three stripe bralet in black — 'Dry clean only', "
+            "chất liệu 100% Cotton."
+        ),
+        "metadata_filter": None,
+        "expected_doc_ids": ["asos-adidas-originals-plus-three-stripe-bralet-in-black"],
+        "evidence": "Mục 'Look After Me' (Dry clean only) + 'About Me' (100% Cotton). "
+                    "Là sản phẩm DUY NHẤT ghi dry clean only trong corpus.",
     },
     {
         "id": 2,
-        "type": "case-escalation",
-        "query": "What must a buyer do before opening an Etsy case, and how long must they wait?",
-        "query_vi": "Buyer phải làm gì trước khi mở Etsy case và phải chờ bao lâu?",
-        "gold_answer": "Dùng Help with Order để liên hệ seller; nếu chưa giải quyết sau 48 giờ thì có thể mở case.",
+        "type": "price-lookup",
+        "query": "How much does the ASOS EDITION satin cami maxi dress with full skirt cost?",
+        "query_vi": "Đầm maxi ASOS EDITION satin cami (chân váy xòe, dusky blue) giá bao nhiêu?",
+        "gold_answer": "£110.00",
         "metadata_filter": None,
-        "expected_doc_ids": ["etsy-cases-policy"],
-        "evidence": "etsy-cases-policy: Help with Order và mốc 48 giờ.",
+        "expected_doc_ids": ["asos-asos-edition-satin-cami-maxi-dress-with-full-skirt-in-dusky-blue"],
+        "evidence": "Front matter price_gbp: 110.00 + mục 'Product details' (Gia niem yet: GBP 110.00).",
     },
     {
         "id": 3,
-        "type": "metadata-filter-shipping",  # câu bắt buộc dùng metadata filter
-        "query": "For a US-bound Etsy order, what shipping duty requirement applies to the seller?",
-        "query_vi": "Với đơn Etsy gửi tới Hoa Kỳ, seller phải đáp ứng yêu cầu nào về thuế/phí nhập khẩu?",
-        "gold_answer": "Phải áp dụng Delivery Duty Paid (DDP), trừ khi DDP thật sự không khả dụng và buyer đã xác nhận khoản phụ thu ước tính.",
-        "metadata_filter": {"customer_role": "seller", "policy_area": "fulfilment-and-shipping"},
-        "expected_doc_ids": ["etsy-shipping-policy"],
-        "evidence": "etsy-shipping-policy: quy định DDP cho đơn U.S.-bound và ngoại lệ hẹp.",
+        "type": "metadata-filter",  # CÂU BẮT BUỘC dùng metadata filter (yêu cầu rubric)
+        "query": "Among the outerwear, which coat is made of faux fur?",
+        "query_vi": "Trong nhóm áo khoác, sản phẩm nào làm từ lông giả?",
+        "gold_answer": "Daisy Street mid-length faux fur coat in wavy checkerboard print.",
+        "metadata_filter": {"category_group": "outerwear", "customer_role": "buyer"},
+        "expected_doc_ids": ["asos-daisy-street-mid-length-faux-fur-coat-in-wavy-checkerboard-print"],
+        "evidence": "Lọc category_group=outerwear và customer_role=buyer "
+                    "(4 doc: bershka, daisy-street, jdy, miss-selfridge); "
+                    "mục 'About Me' của daisy-street ghi 'Super-soft faux fur'.",
     },
     {
         "id": 4,
-        "type": "seller-fees",
-        "query": "What are Etsy's stated listing fee and listing duration?",
-        "query_vi": "Phí listing Etsy được nêu là bao nhiêu và listing kéo dài bao lâu?",
-        "gold_answer": "0,20 USD cho mỗi lần tạo hoặc gia hạn listing; listing hết hạn sau bốn tháng.",
-        "metadata_filter": {"customer_role": "seller"},
-        "expected_doc_ids": ["etsy-fees-policy"],
-        "evidence": "etsy-fees-policy: listing fee USD 0.20 và thời hạn bốn tháng.",
+        "type": "multi-attribute-multi-result",
+        "query": "I want a black halterneck item for the beach — what options are there?",
+        "query_vi": "Tôi muốn món màu đen, kiểu cổ yếm để đi biển — có những lựa chọn nào?",
+        "gold_answer": (
+            "Hai lựa chọn: Public Desire cut out midi beach dress in black (halterneck, thigh split) "
+            "và Hollister co-ord halterneck bikini top in black."
+        ),
+        "metadata_filter": None,
+        "expected_doc_ids": [
+            "asos-public-desire-cut-out-midi-beach-dress-in-black",
+            "asos-hollister-co-ord-halterneck-bikini-top-in-black",
+        ],
+        "evidence": "Cả hai đều color=black + 'Halterneck style' trong mục 'Dac diem'. "
+                    "Câu multi-result: top-3 phải chứa cả hai tài liệu.",
     },
     {
         "id": 5,
-        "type": "payment-safety",
-        "query": "Why must an Etsy transaction not be completed off the platform?",
-        "query_vi": "Vì sao giao dịch Etsy không được hoàn tất ngoài nền tảng?",
-        "gold_answer": "Vì payment, purchase protection và case protection của Etsy không bao phủ giao dịch ngoài nền tảng.",
-        "metadata_filter": None,
-        "expected_doc_ids": ["etsy-off-platform-policy"],
-        "evidence": "etsy-off-platform-policy: giao dịch ngoài Etsy không có các lớp bảo vệ của nền tảng.",
+        "type": "feature-audience",
+        "query": "Is there a maternity dress, and how is it designed to fit?",
+        "query_vi": "Có đầm bầu không, và được thiết kế vừa vặn ra sao?",
+        "gold_answer": (
+            "ASOS DESIGN maternity cami wrap midi dress with lace-up back — "
+            "'Designed to fit you from bump to baby', wrap front, lưng shirred co giãn, £30.00."
+        ),
+        "metadata_filter": None,  # tùy chọn: {"fit_line": "maternity"} (chỉ 1 doc)
+        "expected_doc_ids": ["asos-asos-design-maternity-cami-wrap-midi-dress-with-lace-up-back"],
+        "evidence": "Mục 'Dac diem' ('Designed to fit you from bump to baby', wrap front, shirred stretch back).",
     },
 ]
