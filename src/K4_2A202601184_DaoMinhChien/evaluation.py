@@ -1,4 +1,4 @@
-"""Reproduce the individual similarity and provisional retrieval report.
+"""Reproduce the individual similarity and retrieval evaluation.
 
 Run from the repository root:
     python -m src.K4_2A202601184_DaoMinhChien.evaluation
