@@ -1,6 +1,6 @@
-# Báo cáo nhóm K4 - Lab 7: Embedding & Vector Store
+# Báo cáo nhóm ĐỘ MESSIU - Lab 7: Embedding & Vector Store
 
-**Nhóm:** K4
+**Nhóm:** ĐỘ MESSIU
 
 **Ngày hoàn thiện:** 2026-08-03
 
