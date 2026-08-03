@@ -1,0 +1,70 @@
+{
+  "embedding_model": "BAAI/bge-m3",
+  "results": [
+    {
+      "query_id": 1,
+      "query": "Which item must be dry cleaned only, and what is it made of?",
+      "gold_answer": "adidas Originals Plus three stripe bralet in black — 'Dry clean only', chất liệu 100% Cotton.",
+      "top_docs": [
+        "asos-adidas-originals-plus-three-stripe-bralet-in-black",
+        "asos-asos-edition-satin-cami-maxi-dress-with-full-skirt-in-dusky-blue",
+        "asos-amy-lynn-chainmail-mini-dress-in-ice-blue"
+      ],
+      "retrieval_outcome": "TOP-1",
+      "agent_answer": "The **adidas Originals Plus three stripe bralet in black** must be **dry cleaned only**. It is made of **Main: 100% Cotton**.",
+      "human_verified": true
+    },
+    {
+      "query_id": 2,
+      "query": "How much does the ASOS EDITION satin cami maxi dress with full skirt cost?",
+      "gold_answer": "£110.00",
+      "top_docs": [
+        "asos-asos-edition-satin-cami-maxi-dress-with-full-skirt-in-dusky-blue",
+        "asos-asos-design-maternity-cami-wrap-midi-dress-with-lace-up-back",
+        "asos-asos-luxe-cotton-corset-top-with-cutwork-detail-and-embellishment-in-pale"
+      ],
+      "retrieval_outcome": "TOP-1",
+      "agent_answer": "The ASOS EDITION satin cami maxi dress with full skirt costs **GBP 110.00**.",
+      "human_verified": true
+    },
+    {
+      "query_id": 3,
+      "query": "Among the outerwear, which coat is made of faux fur?",
+      "gold_answer": "Daisy Street mid-length faux fur coat in wavy checkerboard print.",
+      "top_docs": [
+        "asos-daisy-street-mid-length-faux-fur-coat-in-wavy-checkerboard-print",
+        "asos-jdy-longline-teddy-coat-in-beige",
+        "asos-miss-selfridge-boucle-cropped-blazer-co-ord-in-mono-check"
+      ],
+      "retrieval_outcome": "TOP-1",
+      "agent_answer": "The faux fur coat is **Daisy Street mid length faux fur coat in wavy checkerboard print**.\n\n- **Brand:** Daisy Street  \n- **Category:** Coat  \n- **Colour:** Green Check Fur  \n- **Material:** Super-soft faux fur; jacket outer 100% polyester  \n- **Price:** GBP 48.00, reduced price",
+      "human_verified": true
+    },
+    {
+      "query_id": 4,
+      "query": "I want a black halterneck item for the beach — what options are there?",
+      "gold_answer": "Hai lựa chọn: Public Desire cut out midi beach dress in black (halterneck, thigh split) và Hollister co-ord halterneck bikini top in black.",
+      "top_docs": [
+        "asos-hollister-co-ord-halterneck-bikini-top-in-black",
+        "asos-public-desire-cut-out-midi-beach-dress-in-black",
+        "asos-amy-lynn-chainmail-mini-dress-in-ice-blue"
+      ],
+      "retrieval_outcome": "TOP-1",
+      "agent_answer": "Two black halterneck beach options:\n\n1. **Hollister co-ord halterneck bikini top in black**\n   - **Category:** Bikini top\n   - **Price:** £12.50, reduced\n   - **Features:** Part of a co-ord set, bottoms sold separately, halterneck style, tie fastening\n   - **Available sizes:** S - UK 8, M - UK 10\n   - **Material:** Main 80% Nylon, 20% Elastane; lining 100% Polyester\n   - **Care:** Machine wash according to care label\n\n2. **Public Desire cut out midi beach dress in black**\n   - **Category:** Beach dress\n   - **Price:** £30.00\n   - **Features:** Cut-out design, halterneck style, thigh split, slim fit\n   - **Available sizes:** UK 14, UK 16\n   - **Material:** 95% Polyester, 5% Elastane; soft, stretchy jersey\n   - **Care:** Machine wash according to care label",
+      "human_verified": true
+    },
+    {
+      "query_id": 5,
+      "query": "Is there a maternity dress, and how is it designed to fit?",
+      "gold_answer": "ASOS DESIGN maternity cami wrap midi dress with lace-up back — 'Designed to fit you from bump to baby', wrap front, lưng shirred co giãn, £30.00.",
+      "top_docs": [
+        "asos-asos-design-maternity-cami-wrap-midi-dress-with-lace-up-back",
+        "asos-asos-edition-satin-cami-maxi-dress-with-full-skirt-in-dusky-blue",
+        "asos-asos-design-cowl-neck-sleeveless-blouse-with-skinny-tie-waist-detail-in"
+      ],
+      "retrieval_outcome": "TOP-1",
+      "agent_answer": "Yes. The **ASOS DESIGN Maternity cami wrap midi dress with lace up back** is a maternity dress.\n\nIt is **designed to fit you from bump to baby**. It has a **wrap front**, **fixed straps**, a **shirred stretch back**, and a **regular fit**.",
+      "human_verified": true
+    }
+  ]
+}

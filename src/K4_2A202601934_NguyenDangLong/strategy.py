@@ -29,3 +29,10 @@ class HeadingRecursiveChunker(RecursiveChunker):
         heading = "\n".join(heading_path)
         chunks = super().chunk(body)
         return [f"{heading}\n{chunk}".strip() if heading else chunk for chunk in chunks]
+
+
+class HeadingChunker(HeadingRecursiveChunker):
+    """Compatibility name used by the shared benchmark runner."""
+
+    def __init__(self, max_chars: int = 400) -> None:
+        super().__init__(chunk_size=max_chars)
