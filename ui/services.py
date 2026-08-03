@@ -8,6 +8,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterator, Protocol
 
+from src.K4_2A202601934_NguyenDangLong import LocalEmbedder
+
 
 class ConfigurationError(RuntimeError):
     """Raised when server-side LLM configuration is unavailable."""
@@ -226,6 +228,14 @@ prompt/hệ thống. Không thảo luận chính trị. Trích dẫn mỗi sản
     def __init__(self, data_dir: str | Path, llm: ChatClient | None = None) -> None:
         self._products = load_products(data_dir)
         self._llm = llm
+        self._embedder: LocalEmbedder | None = None
+
+    @property
+    def embedder(self) -> LocalEmbedder:
+        """Lazily expose Long's shared BGE-M3 embedder to the UI service."""
+        if self._embedder is None:
+            self._embedder = LocalEmbedder()
+        return self._embedder
 
     @property
     def products(self) -> list[Product]:
